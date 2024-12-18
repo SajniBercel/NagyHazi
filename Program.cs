@@ -1,45 +1,44 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 
 namespace NagyHazi
 {
     public class Program
     {
-        static int[][] Kezdet = new int[9][];
-        static int[][] JatekTer = new int[9][];
+        static byte[,] Kezdet = new byte[9,9];
+        static byte[,] JatekTer = new byte[9,9];
         static void Main(string[] args)
         {
             Kezdet = Beolvas("sudoku.txt");
-            JatekTer = new int[9][];
+            JatekTer = new byte[9,9];
 
-            Array.Copy(Kezdet, JatekTer, Kezdet.Length);
-
+            Array.Copy(Kezdet, JatekTer, Kezdet.Length); // észrevétel: ha nem mátrixot hanem 2 dimenziós tömböt (int[][] tomb) próbálunk meg 
+                                                         // másoltatni akkor csak mint shallow copy müködik, és csak mátrixnál müködik úgy minta a deep copy
             GameLoop();
         }
+
 
         static void GameLoop()
         {
             kiir(-1, -1);
 
-            while (WinCheck())
+            int db = 0;
+
+            while (!WinCheck())
             {
-                // Input
-                int x = 0;
-                int y = 0;
-
-                int errX = -1;
-                int errY = -1;
-
-                int szam = 0;
-
                 bool validInput = false;
+
+                // get input
                 while (!validInput)
                 {
-                    errX = -1;
-                    errY = -1;
-                    x = 0;
-                    y = 0;
+                    int errX = -1;
+                    int errY = -1;
+
+                    int x = 0;
+                    int y = 0;
+
+                    byte szam = 0;
+
+                    //sor
                     while (y < 1)
                     {
                         Console.Write("Sor:");
@@ -49,6 +48,8 @@ namespace NagyHazi
                         if (y > 9 || y < 1)
                             y = 0;
                     }
+
+                    // oszlop
                     while (x < 1)
                     {
                         Console.Write("Oszlop:");
@@ -59,12 +60,12 @@ namespace NagyHazi
                             x = 0;
                     }
 
-                    //validation
-
                     Console.Write("ért:");
                     string newSzam = Console.ReadLine();
+
+                    //validation
                     szam = 0;
-                    if (int.TryParse(newSzam, out szam))
+                    if (byte.TryParse(newSzam, out szam))
                     {
                         x--;
                         y--;
@@ -72,12 +73,8 @@ namespace NagyHazi
                         if (IsValidPos(x, y, szam, out errX, out errY))
                         {
                             validInput = true;
-
-                            JatekTer[y][x] = szam;
-
-                            Debug.WriteLine("MOST FIX y:" + y +" x: " + x + ", szam" + szam);
-
-                            kiir(errX, errY);
+                            JatekTer[y,x] = szam;
+                            kiir();
                         }
                         else
                         {
@@ -87,19 +84,28 @@ namespace NagyHazi
                 }
             }
             
-            Console.WriteLine("Gratulálok nyertél");
+            Console.WriteLine($"Gratulálok nyertél ({db} lépésből)");
         }
 
+        /// <summary>
+        /// megadja hogy egy érték beszúrható-e az adott helyre
+        /// </summary>
+        /// <param name="x">x pos (érték)</param>
+        /// <param name="y">y pos (érték)k</param>
+        /// <param name="szam">érték</param>
+        /// <param name="errX">"kiadja" az x helyét ami a hibát okozza</param>
+        /// <param name="errY">"kiadja" az y helyét ami a hibát okozza</param>
+        /// <returns>true ha beszúrhetó az érték / false ha nem beszúrható</returns>
         static bool IsValidPos(int x, int y, int szam, out int errX, out int errY)
         {
             errX = -1; errY = -1;
-            if (Kezdet[y][x] != 0)
+            if (Kezdet[y,x] != 0)
                 return false;
 
             for (int i = 0; i < 9; i++)
             {
                 //sor
-                if (JatekTer[y][i] == szam && i != x)
+                if (JatekTer[y,i] == szam && i != x)
                 {
                     errX = i;
                     errY = y;
@@ -107,38 +113,59 @@ namespace NagyHazi
                 }
 
                 //oszlop
-                if (JatekTer[i][x] == szam && i != y)
+                if (JatekTer[i,x] == szam && i != y)
                 {
-                    errX = i;
-                    errY = y;
+                    errX = x;
+                    errY = i;
                     return false;
+                }
+            }
+
+            /* !!! végül ez nem kellett de müködik !!! (egy négyzetben sem lehet ugyan az a szám, talán nehezítésnek jó lehet)
+
+            int sorStartIndex = x/3;
+            int oszlopStartIndex = x/3;
+
+            for (int i = sorStartIndex*3; i < sorStartIndex*3+3; i++) 
+            {
+                for (int j = oszlopStartIndex*3; j < oszlopStartIndex*3+3; j++)
+                {
+                    Debug.WriteLine($"y:{i} x:{j}, ért: {JatekTer[i, j]}");
+                    if (JatekTer[i,j] == szam)
+                    {
+                        errX = j;
+                        errY = i;
+                        return false;
+                    }
+                }
+            }
+            */
+
+            return true;
+        }
+
+        /// <returns>true ha vége van a játéknak / false ha még kész a pálya</returns>
+        static bool WinCheck()
+        {
+            // (van-e kitöltetlen mező)
+            for (int i = 0; i < 9; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    if (JatekTer[i, j] == 0)
+                        return false;
                 }
             }
 
             return true;
         }
 
-        static bool WinCheck()
+        /// <summary>
+        ///  alias for kiir(-1, -1)
+        /// </summary>
+        static void kiir()
         {
-            //Sor
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    
-                }
-            }
-
-            //Oszlop
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    
-                }
-            }
-
-            return true;
+            kiir(-1, -1);
         }
 
         /// <param name="errX">ha nincs error akkor legyen -1</param>
@@ -153,65 +180,82 @@ namespace NagyHazi
 
             for (int i = 0; i < 9; i++)
             {
-                Debug.WriteLine("Új sor");
                 Console.Write((i+1).ToString() + " | ");
                 bool van = false;
                 for (int j = 0; j < 9; j++)
                 {
-                    Debug.Write((JatekTer[i][j] != 0 && Kezdet[i][j] == 0).ToString() +"   ");
-
-                    Debug.Write(" I:" + i +", J:" + j + " Jatek: " + JatekTer[i][j] + " Kezdet: " + Kezdet[i][j]);
-
-                    if (i == errY && j == errX && errY != -1 && errX != -1)
+                    if (i == errY && j == errX && errY != -1 && errX != -1) // hiba hely
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.Write($"{Kezdet[i][j]} ");
+
+                        if(JatekTer[i, j] != 0 && Kezdet[i, j] == 0)
+                            Console.BackgroundColor = ConsoleColor.Green;
+
+                        Console.Write($"{JatekTer[i, j]}");
                         Console.ForegroundColor = ConsoleColor.White;
+                        Console.BackgroundColor= ConsoleColor.Black;
+                        Console.Write($" ");
                     }
-                    else if (JatekTer[i][j] != 0 && Kezdet[i][j] == 0)
+                    else if (JatekTer[i, j] != 0 && Kezdet[i, j] == 0) // jó érték
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write($"{JatekTer[i][j]} ");
+                        Console.Write($"{JatekTer[i, j]} ");
                         Console.ForegroundColor = ConsoleColor.White;
                     }
-                    else if (Kezdet[i][j] == 0 && JatekTer[i][j] == 0)
+                    else if (Kezdet[i, j] == 0 && JatekTer[i, j] == 0) // nincs érték
                     {
                         Console.Write("  ");
                     }
-                    else
+                    else                                               // kezdeti érték
                     {
-                        Console.Write($"{Kezdet[i][j]} ");
+                        Console.ForegroundColor= ConsoleColor.Yellow;
+                        Console.Write($"{Kezdet[i, j]} ");
+                        Console.ForegroundColor = ConsoleColor.White;
                     }
 
                     if ((j+1) % 3 == 0)
                         Console.Write("| ");
-                    Debug.WriteLine("");
                 }
                 Console.WriteLine("");
 
                 if ((i + 1) % 3 == 0)
                     Console.WriteLine("  +-------+-------+-------+");
             }
+
+            Console.WriteLine("Szín magyarázat");
+
+            Console.ForegroundColor= ConsoleColor.Green;
+            Console.Write("0");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(": jól beírt érték (zöld karakter)");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write("0");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(": ez az érték akadályozza az új érték behelyezését (piros karakter)");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.BackgroundColor = ConsoleColor.Green;
+            Console.Write("0");
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(": ez az felhasználó által beírt érték jó, de akadályozza az új érték behelyezését (piros karakter zöld háttérrel)");
         }
 
-        static int[][] Beolvas(string file)
+        static byte[,] Beolvas(string file)
         {
             StreamReader f = new StreamReader(file);
-            int[][] Tabla = new int[9][];
+            byte[,] Tabla = new byte[9,9];
 
             int sorIndex = 0;
             while (!f.EndOfStream)
             {
-                Tabla[sorIndex] = new int[9];
-
                 string[] reszek = f.ReadLine().Split(' ');
                 int[] sor = new int[9];
                 for (int i = 0; i < reszek.Length; i++)
                 {
-                    sor[i] = int.Parse(reszek[i]);
+                    Tabla[sorIndex,i] = byte.Parse(reszek[i]);
                 }
-
-                Tabla[sorIndex] = sor;
 
                 sorIndex++;
             }
