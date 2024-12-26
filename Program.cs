@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace NagyHazi
 {
@@ -11,16 +12,15 @@ namespace NagyHazi
             Kezdet = Beolvas("sudoku.txt");
             JatekTer = new byte[9,9];
 
-            Array.Copy(Kezdet, JatekTer, Kezdet.Length); // észrevétel: ha nem mátrixot hanem 2 dimenziós tömböt (int[][] tomb) próbálunk meg 
-                                                         // másoltatni akkor csak mint shallow copy müködik, és csak mátrixnál müködik úgy minta a deep copy
+            Array.Copy(Kezdet, JatekTer, Kezdet.Length); // észrevétel: ha nem mátrixot hanem 2 dimenziós tömböt ( int[][] tomb (én ezt jobban szeretem) )
+                                                         // próbálunk meg másoltatni akkor csak mint shallow copy müködik, és csak mátrixnál müködik úgy minta a deep copy
             GameLoop();
         }
 
-
+        // ez kicsit kókány lett
         static void GameLoop()
         {
-            kiir(-1, -1);
-
+            kiir();
             int db = 0;
 
             while (!WinCheck())
@@ -36,44 +36,64 @@ namespace NagyHazi
                     int x = 0;
                     int y = 0;
 
-                    byte szam = 0;
-
-                    //sor
-                    while (y < 1)
+                    // sor
+                    while (y == 0)
                     {
                         Console.Write("Sor:");
                         string newY = Console.ReadLine();
                         int.TryParse(newY, out y);
 
                         if (y > 9 || y < 1)
+                        {
+                            Console.WriteLine("Rossz sor szám!");
                             y = 0;
+                        }
                     }
 
                     // oszlop
-                    while (x < 1)
+                    while (x == 0)
                     {
                         Console.Write("Oszlop:");
                         string newX = Console.ReadLine();
                         int.TryParse(newX, out x);
 
                         if (x > 9 || x < 1)
+                        {
+                            Console.WriteLine("Rossz oszlop szám!");
                             x = 0;
+                        }
                     }
 
-                    Console.Write("ért:");
-                    string newSzam = Console.ReadLine();
+                    // Szam
+                    byte szam = 0;
+                    x--;
+                    y--;
 
-                    //validation
-                    szam = 0;
-                    if (byte.TryParse(newSzam, out szam))
+                    while (szam == 0)
                     {
-                        x--;
-                        y--;
+                        Console.Write("ért:");
+                        string newSzam = Console.ReadLine();
+
+                        if (!byte.TryParse(newSzam, out szam))
+                        {
+                            Console.WriteLine("rossz szám");
+                            break;
+                        }
+
+                        if ((szam < 1 || szam > 9))
+                        {
+                            szam = 0;
+                            Console.WriteLine("Hibás szám!");
+                            continue;
+                        }
+
+                        db++; // ha jó ha nem lépésnek számolja (nem volt egyértelmű a feladat leírásából hogy mikor számít lépésnek)
+                              // mert ha ugye csak azt számolnánk lépésnek ami jó lépés akkor mindig 51 lenne tehát gondolom a rossz lépés is számít
 
                         if (IsValidPos(x, y, szam, out errX, out errY))
                         {
                             validInput = true;
-                            JatekTer[y,x] = szam;
+                            JatekTer[y, x] = szam;
                             kiir();
                         }
                         else
@@ -83,7 +103,8 @@ namespace NagyHazi
                     }
                 }
             }
-            
+
+            kiir();
             Console.WriteLine($"Gratulálok nyertél ({db} lépésből)");
         }
 
@@ -99,8 +120,10 @@ namespace NagyHazi
         static bool IsValidPos(int x, int y, int szam, out int errX, out int errY)
         {
             errX = -1; errY = -1;
-            if (Kezdet[y,x] != 0)
+            if (Kezdet[y, x] != 0)
+            {
                 return false;
+            }
 
             for (int i = 0; i < 9; i++)
             {
@@ -161,7 +184,7 @@ namespace NagyHazi
         }
 
         /// <summary>
-        ///  alias for kiir(-1, -1)
+        /// alias for kiir(-1, -1)
         /// </summary>
         static void kiir()
         {
@@ -222,7 +245,7 @@ namespace NagyHazi
                     Console.WriteLine("  +-------+-------+-------+");
             }
 
-            Console.WriteLine("Szín magyarázat");
+            Console.WriteLine("\nSzín magyarázat: ");
 
             Console.ForegroundColor= ConsoleColor.Green;
             Console.Write("0");
@@ -239,7 +262,7 @@ namespace NagyHazi
             Console.Write("0");
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(": ez az felhasználó által beírt érték jó, de akadályozza az új érték behelyezését (piros karakter zöld háttérrel)");
+            Console.WriteLine(": ez az felhasználó által beírt érték jó, de akadályozza az új érték behelyezését (piros karakter zöld háttérrel)\n");
         }
 
         static byte[,] Beolvas(string file)
