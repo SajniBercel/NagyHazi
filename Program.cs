@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace NagyHazi
 {
@@ -7,6 +6,9 @@ namespace NagyHazi
     {
         static byte[,] Kezdet = new byte[9,9];
         static byte[,] JatekTer = new byte[9,9];
+
+        #region Feladat 1 a, b második fele
+
         static void Main(string[] args)
         {
             Kezdet = Beolvas("sudoku.txt");
@@ -16,7 +18,9 @@ namespace NagyHazi
                                                          // próbálunk meg másoltatni akkor csak mint shallow copy müködik, és csak mátrixnál müködik úgy minta a deep copy
             GameLoop();
         }
+        #endregion
 
+        #region Feladat: 2 a, b
         // ez kicsit kókány lett
         static void GameLoop()
         {
@@ -30,13 +34,8 @@ namespace NagyHazi
                 // get input
                 while (!validInput)
                 {
-                    int errX = -1;
-                    int errY = -1;
-
-                    int x = 0;
-                    int y = 0;
-
                     // sor
+                    int y = 0;
                     while (y == 0)
                     {
                         Console.Write("Sor:");
@@ -51,6 +50,7 @@ namespace NagyHazi
                     }
 
                     // oszlop
+                    int x = 0;
                     while (x == 0)
                     {
                         Console.Write("Oszlop:");
@@ -66,8 +66,12 @@ namespace NagyHazi
 
                     // Szam
                     byte szam = 0;
+
                     x--;
                     y--;
+
+                    int errX = -1;
+                    int errY = -1;
 
                     while (szam == 0)
                     {
@@ -107,6 +111,9 @@ namespace NagyHazi
             kiir();
             Console.WriteLine($"Gratulálok nyertél ({db} lépésből)");
         }
+        #endregion
+
+        #region Feladat 3 a
 
         /// <summary>
         /// megadja hogy egy érték beszúrható-e az adott helyre
@@ -166,6 +173,9 @@ namespace NagyHazi
 
             return true;
         }
+        #endregion
+
+        #region Feladat 3 b
 
         /// <returns>true ha vége van a játéknak / false ha még kész a pálya</returns>
         static bool WinCheck()
@@ -182,6 +192,9 @@ namespace NagyHazi
 
             return true;
         }
+        #endregion
+
+        #region Feladat: 4
 
         /// <summary>
         /// alias for kiir(-1, -1)
@@ -264,6 +277,9 @@ namespace NagyHazi
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(": ez az felhasználó által beírt érték jó, de akadályozza az új érték behelyezését (piros karakter zöld háttérrel)\n");
         }
+        #endregion
+
+        #region Feladat 1 b első fele
 
         static byte[,] Beolvas(string file)
         {
@@ -285,5 +301,6 @@ namespace NagyHazi
 
             return Tabla;
         }
+        #endregion
     }
 }
